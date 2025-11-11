@@ -54,6 +54,10 @@ header {
         filter: invert(1);
         width: 20px;
     }
+    #login {
+        filter: invert(1);
+        width: 28px;
+    }
     #logo {
         filter: invert(1);
         height: 35.5px;
@@ -827,3 +831,102 @@ select:invalid {
     .carrito-footer{ gap: 10px 12px; }
 }
 
+/* ------------------------------------------------------------------------------------------- */
+/* login */
+
+.login {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    height: 87vh;
+
+    #logo {
+        filter:
+            invert(100%);
+        height: 35.5px;
+    }
+
+    div.logInTitulo {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        gap: 7px;
+        background-color: var(--color-hover-btn);
+        padding-block: 1.6rem;
+        border-radius: 1rem 1rem 0 0;
+        h2 {
+            margin: 0;
+            color: white;
+            font-size: 28px;
+        }
+    }
+
+    div.logInForm {
+        padding: 2.2rem;
+        h2{
+            margin-bottom: 20px;
+            color: var(--color-hover-nav);
+            font-size: 24px;
+            margin-top: 10px;
+        }
+    }
+
+    div.login-container {
+        background: white;
+        border: 1px solid var(--color-placeholder);
+        border-radius: 1rem;
+        text-align: center;
+        max-width: 340px;
+        flex: 1 1 200px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+        transition: transform 0.3s;
+    }
+
+    .login-form input {
+        display: block;
+        width: 248.409px;
+        padding: 0.6rem;
+        margin-bottom: 1rem;
+        border: 1px solid var(--color-placeholder);
+        border-radius: 0.4rem;
+        font-size: 14px;
+        outline: none;
+        transition: border-color 0.3s;
+    }
+
+    .login-form input:focus {
+        border-color: var(--color-hover-btn);
+    }
+
+    .btn-login {
+        background-color: var(--color-hover-btn);
+        color: white;
+        border: none;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        width: 100%;
+    }
+
+    .btn-login:hover {
+        background-color: var(--color-hover-nav);
+    }
+
+    .register-text {
+        margin-top: 2rem;
+        font-size: 14px;
+    }
+
+    .register-text a {
+        color: var(--color-hover-btn);
+        text-decoration: none;
+    }
+
+    .register-text a:hover {
+        text-decoration: underline;
+    }
+}
