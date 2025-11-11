@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Inicio | De La Huerta</title>
+        <link rel="icon" href="Imagenes/icon.png" type="image/png">
+        <link rel="stylesheet" type="text/css" href="style.css">
+        <script src="script.js" defer></script>
+    </head>
+    <body> 
+        <main class="login">
+            <div class="login-container">
+                <div class="logInTitulo">
+                    <img src="Imagenes/Logo.png" alt="Logo" id="logo"> 
+                    <h2>De la Huerta</h2>
+                </div>
+                <div class="logInForm">
+                    <h2>Registro</h2>
+                    <form action="/login" method="POST" class="login-form">
+                        <input type="text" id="user" name="user" placeholder="Usuario" required>
+                        <input type="password" id="password" name="password" placeholder="Contraseña" required>
+                        <input type="password" id="passwordConfirm" name="password" placeholder="Confirma tu contraseña" required>
+                        <button type="submit" class="btn-login">Ingresar</button>
+
+                        <p class="register-text">
+                            <a href="login.html">← Regresar</a>
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </main>
+        <footer>
+            <p>© Derechos Reservados 2025. Desarrollado por Laura María Franco Ulloa y Juan Sebastián Ulloa Mejía</p>
+        </footer>
+    </body>
+</html>
