@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedidos | De La Huerta</title>
+    <link rel="icon" href="Imagenes/icon.png" type="image/png">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script src="pedidos.js" defer></script>
+</head>
+<body>
+
+<header>
+    <a href="index.html">
+        <h2>
+            <img src="Imagenes/Logo.png" alt="Logo" id="logo"> 
+            DE LA HUERTA
+        </h2>
+    </a>
+    <nav>
+        <a href="index.html">Inicio</a>
+        <a href="productos.html">Productos</a>
+        <a href="nosotros.html">Nosotros</a>
+        <a href="contacto.html">Contacto</a>
+        <a href="pedidos.html">Admin</a>
+        <a href="carrito.html" id="enlace-carrito">
+            <img src="Imagenes/carro-de-la-compra.png" alt="Carrito" id="carrito">
+        </a>
+        <a href="login.html" id="enlace-login">
+            <img src="Imagenes/user.png" alt="login" id="login">
+        </a>
+    </nav>
+</header>
+
+<main>
+    <section id="pedidos-panel">
+        <h2>Gestión de pedidos</h2>
+
+        <img src="Imagenes/loader.gif" alt="Cargando..." id="cargando">
+
+        <div class="pedido-seccion">
+            <h3>Pedidos en proceso</h3>
+            <ul id="pedidos-proceso"></ul>
+        </div>
+
+        <div class="pedido-seccion">
+            <h3>Pedidos atendidos</h3>
+            <ul id="pedidos-atendidos"></ul>
+        </div>
+    </section>
+</main>
+
+<footer>
+    <p>© Derechos Reservados 2025. Desarrollado por Laura María Franco Ulloa y Juan Sebastián Ulloa Mejía</p>
+</footer>
+
+</body>
+</html>
