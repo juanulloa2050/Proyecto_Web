@@ -87,13 +87,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Guardar datos de autenticación
       saveAuthData(data.token, data.username, data.role);
+      
+      console.log('✅ Login exitoso, datos guardados:');
+      console.log('Token:', data.token.substring(0, 20) + '...');
+      console.log('Usuario:', data.username);
+      console.log('Rol:', data.role);
 
       // Redirigir según el rol
       if (data.role === 'ADMIN') {
         alert(`Bienvenido Administrador ${data.username}!`);
+        console.log('🔄 Redirigiendo a pedidos.html...');
         window.location.href = 'pedidos.html';
       } else {
         alert(`Bienvenido ${data.username}!`);
+        console.log('🔄 Redirigiendo a index.html...');
         window.location.href = 'index.html';
       }
 

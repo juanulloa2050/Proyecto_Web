@@ -1,21 +1,59 @@
 // =================== CONFIG ===================
 const API_PEDIDOS = 'https://script.google.com/macros/s/AKfycby1PE8A1GbuEkiSefoqRujAGhnNy-SjLqNDi5rA1bUxBhGuI4YDFWX7ABEe9BrMJFZd/exec';
 
+// =================== AUTH UTILS (duplicado por si login.js no carga) ===================
+const TOKEN_KEY = 'auth_token';
+const USER_KEY = 'user_data';
+
+function getAuthToken() {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+function getUserData() {
+  try {
+    return JSON.parse(localStorage.getItem(USER_KEY));
+  } catch {
+    return null;
+  }
+}
+
+function isAuthenticated() {
+  return !!getAuthToken();
+}
+
+function isAdmin() {
+  const user = getUserData();
+  return user?.role === 'ADMIN';
+}
+
+function clearAuthData() {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+}
+
 // =================== AUTH CHECK ===================
 document.addEventListener('DOMContentLoaded', async () => {
+  console.log('🔍 Verificando autenticación...');
+  console.log('Token:', getAuthToken());
+  console.log('User data:', getUserData());
+
   // Verificar autenticación
-  if (!window.authUtils?.isAuthenticated()) {
+  if (!isAuthenticated()) {
+    console.log('❌ No autenticado, redirigiendo a login...');
     alert('Debes iniciar sesión para acceder a esta página');
     window.location.href = 'login.html';
     return;
   }
 
   // Verificar si es ADMIN
-  if (!window.authUtils?.isAdmin()) {
+  if (!isAdmin()) {
+    console.log('❌ No es admin, redirigiendo a inicio...');
     alert('No tienes permisos de administrador');
     window.location.href = 'index.html';
     return;
   }
+
+  console.log('✅ Autenticación verificada, cargando pedidos...');
 
   // Cargar pedidos
   await cargarPedidos();
