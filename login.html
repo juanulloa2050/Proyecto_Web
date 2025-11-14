@@ -5,7 +5,8 @@
         <title>Iniciar sesión | De La Huerta</title>
         <link rel="icon" href="Imagenes/icon.png" type="image/png">
         <link rel="stylesheet" type="text/css" href="style.css">
-        <script src="script.js" defer></script>
+        <!-- Cargar login.js en lugar de script.js -->
+        <script src="login.js" defer></script>
     </head>
     <body> 
         <main class="login">
@@ -16,7 +17,7 @@
                 </div>
                 <div class="logInForm">
                     <h2>Iniciar sesión</h2>
-                    <form action="/login" method="POST" class="login-form">
+                    <form class="login-form">
                         <input type="text" id="user" name="user" placeholder="Usuario" required>
                         <input type="password" id="password" name="password" placeholder="Contraseña" required>
 
