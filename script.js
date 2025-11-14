@@ -474,3 +474,42 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('Error crítico:', e);
   }
 });
+
+// =================== MANEJO DEL ÍCONO DE USUARIO ===================
+document.addEventListener('DOMContentLoaded', () => {
+  const userLink = document.getElementById('enlace-user-admin');
+  if (!userLink) return;
+
+  // Verificar si hay sesión activa
+  const token = localStorage.getItem('auth_token');
+  const userData = localStorage.getItem('user_data');
+
+  if (!token || !userData) {
+    // No hay sesión, redirigir a login
+    userLink.href = 'login.html';
+    return;
+  }
+
+  try {
+    const user = JSON.parse(userData);
+    
+    // Agregar nombre de usuario visible
+    const username = document.createElement('span');
+    username.style.cssText = 'color: white; margin-left: 5px; font-size: 0.9rem;';
+    username.textContent = user.username;
+    userLink.appendChild(username);
+
+    // Si es admin, va a admin-users, si no, muestra alerta
+    userLink.addEventListener('click', (e) => {
+      if (user.role !== 'ADMIN') {
+        e.preventDefault();
+        alert('🚫 No eres administrador\n\nSolo los administradores pueden acceder a la gestión de usuarios.');
+      }
+      // Si es admin, el href normal funcionará
+    });
+
+  } catch (error) {
+    console.error('Error parsing user data:', error);
+    userLink.href = 'login.html';
+  }
+});
