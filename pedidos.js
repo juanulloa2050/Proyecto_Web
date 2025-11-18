@@ -1,6 +1,8 @@
 // =================== CONFIG ===================
 const API_BASE = 'https://proyectowebbackend-production.up.railway.app/api';
 const API_PEDIDOS = `${API_BASE}/pedidos`;
+const API_BASE = 'https://proyectowebbackend-production.up.railway.app/api';
+const API_PEDIDOS = `${API_BASE}/pedidos`;
 
 const TOKEN_KEY = 'auth_token';
 const USER_KEY  = 'user_data';
@@ -32,7 +34,12 @@ function isAdmin() {
 function ensureAuthenticatedAdmin() {
   if (!isAuthenticated() || !isAdmin()) {
     alert('Debes iniciar sesión como administrador para ver los pedidos.');
+function ensureAuthenticatedAdmin() {
+  if (!isAuthenticated() || !isAdmin()) {
+    alert('Debes iniciar sesión como administrador para ver los pedidos.');
     window.location.href = 'login.html';
+  }
+}
   }
 }
 
@@ -101,10 +108,20 @@ function renderPedidos(pedidos) {
 
   const enProceso = pedidos.filter(p => (p.estado || '').toLowerCase() !== 'atendido');
   const atendidos = pedidos.filter(p => (p.estado || '').toLowerCase() === 'atendido');
+  if (!Array.isArray(pedidos) || pedidos.length === 0) {
+    listaProceso.innerHTML = '<li class="empty">No hay pedidos en proceso</li>';
+    listaAtendidos.innerHTML = '<li class="empty">No hay pedidos atendidos</li>';
+    return;
+  }
+
+  const enProceso = pedidos.filter(p => (p.estado || '').toLowerCase() !== 'atendido');
+  const atendidos = pedidos.filter(p => (p.estado || '').toLowerCase() === 'atendido');
 
   if (enProceso.length === 0) {
     listaProceso.innerHTML = '<li class="empty">No hay pedidos en proceso</li>';
   } else {
+    enProceso.forEach(p => {
+      listaProceso.appendChild(crearPedidoItem(p, false));
     enProceso.forEach(p => {
       listaProceso.appendChild(crearPedidoItem(p, false));
     });
@@ -113,6 +130,8 @@ function renderPedidos(pedidos) {
   if (atendidos.length === 0) {
     listaAtendidos.innerHTML = '<li class="empty">No hay pedidos atendidos</li>';
   } else {
+    atendidos.forEach(p => {
+      listaAtendidos.appendChild(crearPedidoItem(p, true));
     atendidos.forEach(p => {
       listaAtendidos.appendChild(crearPedidoItem(p, true));
     });
@@ -162,6 +181,35 @@ async function marcarComoAtendido(pedidoId) {
   if (!confirm('¿Marcar este pedido como atendido?')) return;
 
   try {
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('No hay token de autenticación');
+    }
+
+    const res = await fetch(`${API_PEDIDOS}/${pedidoId}/estado`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ estado: 'atendido' })
+    });
+
+    if (res.status === 401 || res.status === 403) {
+      alert('Tu sesión ha expirado o no tienes permisos. Inicia sesión nuevamente.');
+      window.location.href = 'login.html';
+      return;
+    }
+
+    if (!res.ok) {
+      const txt = await res.text().catch(() => '');
+      throw new Error(`No se pudo actualizar el pedido.\n${txt}`);
+    }
+
+    await cargarPedidos();
+  } catch (err) {
+    console.error('Error actualizando pedido:', err);
+    alert('Error al actualizar el pedido.\n' + err.message);
     const token = getAuthToken();
     if (!token) {
       throw new Error('No hay token de autenticación');
