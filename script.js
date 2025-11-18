@@ -12,9 +12,6 @@ const fmt = n => Number(n).toFixed(2);
 const MIN_SPINNER_MS = 700;
 const FETCH_TIMEOUT_MS = 8000;
 const RETRY_DELAY_MS = 1200;
-const MIN_SPINNER_MS = 700;
-const FETCH_TIMEOUT_MS = 8000;
-const RETRY_DELAY_MS = 1200;
 
 // =================== ESTADO ===================
 let productos = [];
@@ -24,7 +21,6 @@ function showLoader() {
   const img = document.getElementById('cargando');
   if (img) img.style.display = 'block';
 }
-
 
 function hideLoader() {
   const img = document.getElementById('cargando');
@@ -67,7 +63,6 @@ function onImgError(ev) {
 }
 
 // =================== CARGA DE PRODUCTOS ===================
-// =================== CARGA DE PRODUCTOS ===================
 async function loadProductos() {
   const start = performance.now();
   showLoader();
@@ -79,9 +74,6 @@ async function loadProductos() {
       throw new Error(`[HTTP ${res.status}] No se pudo cargar productos.\n${body}`);
     }
     let json;
-    try {
-      json = await res.json();
-    } catch {
     try {
       json = await res.json();
     } catch {
@@ -112,7 +104,6 @@ async function loadProductos() {
       alert(`No se pudieron cargar los productos.\n${e2.message}`);
       productos = [];
       return;
-      return;
     }
   }
 
@@ -138,10 +129,7 @@ async function loadProductos() {
 }
 
 // =================== RENDER CATÁLOGO ===================
-// =================== RENDER CATÁLOGO ===================
 function renderProductosIfNeeded() {
-  const main = document.getElementById('main-productos');
-  if (!main) return;
   const main = document.getElementById('main-productos');
   if (!main) return;
 
@@ -152,13 +140,8 @@ function renderProductosIfNeeded() {
   const h2 = document.createElement('h2');
   h2.textContent = 'Productos';
   main.appendChild(h2);
-  main.appendChild(h2);
 
   if (!Array.isArray(productos) || productos.length === 0) {
-    const empty = document.createElement('p');
-    empty.style.cssText = 'padding:1rem;color:#666';
-    empty.textContent = 'No hay productos disponibles en este momento.';
-    main.appendChild(empty);
     const empty = document.createElement('p');
     empty.style.cssText = 'padding:1rem;color:#666';
     empty.textContent = 'No hay productos disponibles en este momento.';
@@ -171,19 +154,7 @@ function renderProductosIfNeeded() {
     const cat = p.categoria || 'Otros';
     if (!categorias[cat]) categorias[cat] = [];
     categorias[cat].push(p);
-    const cat = p.categoria || 'Otros';
-    if (!categorias[cat]) categorias[cat] = [];
-    categorias[cat].push(p);
   });
-
-  Object.entries(categorias).forEach(([cat, items]) => {
-    const sec = document.createElement('section');
-    sec.className = 'productos-categoria';
-
-    const h3 = document.createElement('h3');
-    h3.textContent = cat;
-    sec.appendChild(h3);
-
 
   Object.entries(categorias).forEach(([cat, items]) => {
     const sec = document.createElement('section');
@@ -195,19 +166,15 @@ function renderProductosIfNeeded() {
 
     const grid = document.createElement('div');
     grid.className = 'productos-grid';
-    grid.className = 'productos-grid';
 
     items.forEach(p => {
-    items.forEach(p => {
       const art = document.createElement('article');
-      art.className = 'producto-card';
       art.className = 'producto-card';
       art.innerHTML = `
         <img src="${imgSrc(p.imagen)}" alt="${p.nombre}">
         <div>
           <h3>${p.nombre}</h3>
           <p>${p.descripcion || 'Sin descripción'}</p>
-          <div class="precio-y-boton">
           <div class="precio-y-boton">
             <h4>$ ${fmt(p.precio)}</h4>
             <input class="qty" type="number" min="1" value="1" />
@@ -219,9 +186,6 @@ function renderProductosIfNeeded() {
       img.addEventListener('error', onImgError);
       grid.appendChild(art);
     });
-
-    sec.appendChild(grid);
-    main.appendChild(sec);
 
     sec.appendChild(grid);
     main.appendChild(sec);
@@ -258,10 +222,7 @@ function addToCart(id, qty) {
 function initProductosPage() {
   const main = document.getElementById('main-productos');
   if (!main) return;
-  const main = document.getElementById('main-productos');
-  if (!main) return;
 
-  main.addEventListener('click', (e) => {
   main.addEventListener('click', (e) => {
     const btn = e.target.closest('.btn-add');
     if (!btn) return;
@@ -280,34 +241,12 @@ function renderCarrito() {
   const lista = document.getElementById('carrito-lista');
   const totalSpan = document.getElementById('total');
   if (!lista || !totalSpan) return;
-    const article = btn.closest('article');
-    const qtyInput = article?.querySelector('.qty');
-    let qty = parseInt(qtyInput?.value ?? '1', 10);
-    if (!Number.isFinite(qty) || qty < 1) qty = 1;
-
-    addToCart(id, qty);
-  });
-}
-
-function renderCarrito() {
-  const lista = document.getElementById('carrito-lista');
-  const totalSpan = document.getElementById('total');
-  if (!lista || !totalSpan) return;
 
   lista.innerHTML = '';
   const cart = getCart();
   const entries = Object.entries(cart);
   let total = 0;
-  lista.innerHTML = '';
-  const cart = getCart();
-  const entries = Object.entries(cart);
-  let total = 0;
 
-  if (!entries.length) {
-    lista.innerHTML = '<li class="empty">Tu carrito está vacío.</li>';
-    totalSpan.textContent = fmt(0);
-    return;
-  }
   if (!entries.length) {
     lista.innerHTML = '<li class="empty">Tu carrito está vacío.</li>';
     totalSpan.textContent = fmt(0);
@@ -319,33 +258,7 @@ function renderCarrito() {
     if (!p) return;
     const subtotal = p.precio * cant;
     total += subtotal;
-  entries.forEach(([idStr, cant]) => {
-    const p = productos.find(pp => pp.id === Number(idStr));
-    if (!p) return;
-    const subtotal = p.precio * cant;
-    total += subtotal;
 
-    const li = document.createElement('li');
-    li.className = 'carrito-item';
-    li.innerHTML = `
-      <div class="thumb">
-        <img src="${imgSrc(p.imagen)}" alt="${p.nombre}">
-      </div>
-      <div class="info">
-        <strong>${p.nombre.replace(/_/g, ' ')}</strong>
-        <small>$ ${fmt(p.precio)} c/u</small>
-      </div>
-      <div class="controls">
-        <button class="btn-qty" data-action="menos" data-id="${p.id}">-</button>
-        <span class="cant">${cant}</span>
-        <button class="btn-qty" data-action="mas" data-id="${p.id}">+</button>
-        <button class="btn-remove" data-action="del" data-id="${p.id}">X</button>
-      </div>
-      <div class="subtotal">$ ${fmt(subtotal)}</div>
-    `;
-    li.querySelector('img').addEventListener('error', onImgError);
-    lista.appendChild(li);
-  });
     const li = document.createElement('li');
     li.className = 'carrito-item';
     li.innerHTML = `
@@ -437,7 +350,6 @@ function initCarritoPage() {
   }
 
   renderCarrito();
-  renderCarrito();
 }
 
 // =================== DETALLE + ENVÍO DE PEDIDO ===================
@@ -488,16 +400,12 @@ function buildOrderPayload() {
     direccion,
     otros_datos: otros,
     productos: productosStr,
-    valor_total: Number(total.toFixed(2))
+    valor_total: Number(total.toFixed(2)),
+    items
   };
 }
 
-async function enviarPedido() {
-  const form = document.querySelector('#main-detalle form');
-  if (form && !form.reportValidity()) {
-    return;
-  }
-
+async function enviarPedidoNoBloqueante() {
   const payload = buildOrderPayload();
   const body = JSON.stringify(payload);
 
@@ -581,17 +489,9 @@ function initDetalleCompraPage() {
     $pagar.setAttribute('type', 'button');
   }
 
-  const pTotal = document.createElement('p');
-  pTotal.className = 'total';
-  pTotal.innerHTML = `Total: <strong>$ ${fmt(total)}</strong>`;
-  resumen.appendChild(pTotal);
-
-  const form = main.querySelector('form');
-  main.insertBefore(resumen, form || null);
-
-  const btnPagar = document.getElementById('pagar');
-  if (btnPagar) {
-    btnPagar.addEventListener('click', async (e) => {
+  const form = document.querySelector('form');
+  if (form) {
+    form.addEventListener('submit', (e) => {
       e.preventDefault();
       $pagar.click();
     });
