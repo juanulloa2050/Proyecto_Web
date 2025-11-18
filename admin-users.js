@@ -173,18 +173,16 @@ function configurarFormulario() {
 // =================== BOTÓN LOGOUT ===================
 function agregarBotonLogout() {
   const userAdminLink = document.getElementById('enlace-user-admin');
-  if (!userAdminLink) return;
+  if (userAdminLink) {
+    const userData = getUserData();
+    if (userData) {
+      const infoSpan = document.createElement('span');
+      infoSpan.className = 'user-header-info';
+      infoSpan.textContent = userData.username;
+      userAdminLink.appendChild(infoSpan);
+    }
+  }
 
-  const userData = getUserData();
-  if (!userData) return;
-
-  // Mostrar nombre de usuario en el header
-  const infoSpan = document.createElement('span');
-  infoSpan.className = 'user-header-info';
-  infoSpan.textContent = userData.username;
-  userAdminLink.appendChild(infoSpan);
-
-  // Crear botón/logout en el nav
   const nav = document.querySelector('header nav');
   if (!nav) return;
 
@@ -222,12 +220,20 @@ function mostrarNoAutorizado() {
 
 // =================== BOOTSTRAP ===================
 document.addEventListener('DOMContentLoaded', async () => {
-  if (!isAuthenticated() || !isAdmin()) {
-    mostrarNoAutorizado();
-    agregarBotonLogout();
+  // 1) Si NO hay sesión => ir al login
+  if (!isAuthenticated()) {
+    window.location.href = 'login.html';
     return;
   }
 
+  // 2) Si hay sesión pero NO es admin => mostrar acceso denegado
+  if (!isAdmin()) {
+    agregarBotonLogout();
+    mostrarNoAutorizado();
+    return;
+  }
+
+  // 3) Es admin => cargar normalmente
   console.log('✅ Acceso autorizado, cargando usuarios...');
 
   await cargarUsuarios();
