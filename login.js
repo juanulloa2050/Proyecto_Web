@@ -3,30 +3,30 @@ const API_BASE = 'https://proyectowebbackend-production.up.railway.app/api';
 const TOKEN_KEY = 'auth_token';
 const USER_KEY = 'user_data';
 
-// Mensaje de debug
 console.log('🔗 API Base URL:', API_BASE);
 
-// =================== AUTH UTILS ===================
+// =================== AUTH UTILS (sessionStorage) ===================
 function saveAuthData(token, username, role) {
-  localStorage.setItem(TOKEN_KEY, token);
-  localStorage.setItem(USER_KEY, JSON.stringify({ username, role }));
+  sessionStorage.setItem(TOKEN_KEY, token);
+  sessionStorage.setItem(USER_KEY, JSON.stringify({ username, role }));
 }
 
 function getAuthToken() {
-  return localStorage.getItem(TOKEN_KEY);
+  return sessionStorage.getItem(TOKEN_KEY);
 }
 
 function getUserData() {
   try {
-    return JSON.parse(localStorage.getItem(USER_KEY));
+    const raw = sessionStorage.getItem(USER_KEY);
+    return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
   }
 }
 
 function clearAuthData() {
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(USER_KEY);
+  sessionStorage.removeItem(TOKEN_KEY);
+  sessionStorage.removeItem(USER_KEY);
 }
 
 function isAuthenticated() {
@@ -35,38 +35,26 @@ function isAuthenticated() {
 
 function isAdmin() {
   const user = getUserData();
-  return user?.role === 'ADMIN';
+  return user && user.role === 'ADMIN';
 }
 
-// =================== LOGIN LOGIC ===================
+// =================== LOGIN ===================
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.querySelector('.login-form');
   if (!form) return;
-
-  // Verificar si ya está autenticado
-  if (isAuthenticated()) {
-    const user = getUserData();
-    if (user?.role === 'ADMIN') {
-      window.location.href = 'pedidos.html';
-    } else {
-      window.location.href = 'index.html';
-    }
-    return;
-  }
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const username = document.getElementById('user').value.trim();
     const password = document.getElementById('password').value;
-    const submitBtn = form.querySelector('button[type="submit"]');
 
     if (!username || !password) {
       alert('Por favor completa todos los campos');
       return;
     }
 
-    // Deshabilitar botón
+    const submitBtn = form.querySelector('button[type="submit"]');
     submitBtn.disabled = true;
     submitBtn.textContent = 'Ingresando...';
 
@@ -74,39 +62,29 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch(`${API_BASE}/login`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ username, password })
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
         throw new Error(data.error || 'Error al iniciar sesión');
       }
 
-      // Guardar datos de autenticación
       saveAuthData(data.token, data.username, data.role);
-      
-      console.log('✅ Login exitoso, datos guardados:');
-      console.log('Token:', data.token.substring(0, 20) + '...');
-      console.log('Usuario:', data.username);
-      console.log('Rol:', data.role);
+      console.log('✅ Login exitoso:', data.username, data.role);
 
-      // Redirigir según el rol
+      // Redirigir a inicio (o a admin si es admin)
       if (data.role === 'ADMIN') {
-        alert(`Bienvenido Administrador ${data.username}!`);
-        console.log('🔄 Redirigiendo a pedidos.html...');
-        window.location.href = 'pedidos.html';
+        window.location.href = 'admin-users.html';
       } else {
-        alert(`Bienvenido ${data.username}!`);
-        console.log('🔄 Redirigiendo a index.html...');
         window.location.href = 'index.html';
       }
-
     } catch (error) {
-      console.error('Error de login:', error);
-      alert(error.message || 'Error al iniciar sesión. Verifica tus credenciales.');
+      console.error('Error en login:', error);
+      alert(`❌ Error: ${error.message}`);
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Ingresar';
@@ -120,7 +98,7 @@ function logout() {
   window.location.href = 'login.html';
 }
 
-// Exportar funciones para uso global
+// Exponer utilidades para otros scripts
 window.authUtils = {
   isAuthenticated,
   isAdmin,

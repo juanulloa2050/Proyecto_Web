@@ -1,17 +1,20 @@
 // =================== CONFIG ===================
-const API_PEDIDOS = 'https://script.google.com/macros/s/AKfycby1PE8A1GbuEkiSefoqRujAGhnNy-SjLqNDi5rA1bUxBhGuI4YDFWX7ABEe9BrMJFZd/exec';
+const API_BASE = 'https://proyectowebbackend-production.up.railway.app/api';
+const API_PEDIDOS = `${API_BASE}/pedidos`;
 
-// =================== AUTH UTILS (duplicado por si login.js no carga) ===================
 const TOKEN_KEY = 'auth_token';
-const USER_KEY = 'user_data';
+const USER_KEY  = 'user_data';
+const fmt = n => Number(n).toFixed(2);
 
+// =================== AUTH UTILS (sessionStorage) ===================
 function getAuthToken() {
-  return localStorage.getItem(TOKEN_KEY);
+  return sessionStorage.getItem(TOKEN_KEY);
 }
 
 function getUserData() {
   try {
-    return JSON.parse(localStorage.getItem(USER_KEY));
+    const raw = sessionStorage.getItem(USER_KEY);
+    return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
   }
@@ -23,44 +26,15 @@ function isAuthenticated() {
 
 function isAdmin() {
   const user = getUserData();
-  return user?.role === 'ADMIN';
+  return user && user.role === 'ADMIN';
 }
 
-function clearAuthData() {
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(USER_KEY);
-}
-
-// =================== AUTH CHECK ===================
-document.addEventListener('DOMContentLoaded', async () => {
-  console.log('🔍 Verificando autenticación...');
-  console.log('Token:', getAuthToken());
-  console.log('User data:', getUserData());
-
-  // Verificar autenticación
-  if (!isAuthenticated()) {
-    console.log('❌ No autenticado, redirigiendo a login...');
-    alert('Debes iniciar sesión para acceder a esta página');
+function ensureAuthenticatedAdmin() {
+  if (!isAuthenticated() || !isAdmin()) {
+    alert('Debes iniciar sesión como administrador para ver los pedidos.');
     window.location.href = 'login.html';
-    return;
   }
-
-  // Verificar si es ADMIN
-  if (!isAdmin()) {
-    console.log('❌ No es admin, redirigiendo a inicio...');
-    alert('No tienes permisos de administrador');
-    window.location.href = 'index.html';
-    return;
-  }
-
-  console.log('✅ Autenticación verificada, cargando pedidos...');
-
-  // Cargar pedidos
-  await cargarPedidos();
-
-  // Agregar botón de cerrar sesión si no existe
-  agregarBotonLogout();
-});
+}
 
 // =================== LOADER ===================
 function showLoader() {
@@ -73,51 +47,43 @@ function hideLoader() {
   if (img) img.style.display = 'none';
 }
 
-// =================== CARGAR PEDIDOS ===================
-async function cargarPedidos() {
-  showLoader();
+// =================== RENDER DE PEDIDOS ===================
+function crearPedidoItem(pedido, isAtendido) {
+  const li = document.createElement('li');
+  li.className = 'pedido-item';
 
+  let fechaStr = pedido.timestamp || '';
   try {
-    const response = await fetch(API_PEDIDOS, {
-      method: 'GET',
-      cache: 'no-store'
-    });
-
-    if (!response.ok) {
-      throw new Error('Error al cargar pedidos');
+    const d = new Date(pedido.timestamp);
+    if (!isNaN(d.getTime())) {
+      fechaStr = d.toLocaleString('es-CO');
     }
-
-    const data = await response.json();
-    
-    if (!Array.isArray(data?.data)) {
-      console.warn('Respuesta sin data[]:', data);
-      throw new Error('Formato de respuesta inválido');
-    }
-
-    const pedidos = data.data.map((row, idx) => ({
-      id: row.id || idx + 1,
-      timestamp: row.timestamp || row.fecha || '',
-      nombre: row.nombre || '',
-      telefono: row.telefono || '',
-      ciudad: row.ciudad || '',
-      direccion: row.direccion || '',
-      otros_datos: row.otros_datos || row.otros || '',
-      productos: row.productos || '',
-      valor_total: Number(row.valor_total || 0),
-      estado: row.estado || 'proceso'
-    }));
-
-    renderPedidos(pedidos);
-
-  } catch (error) {
-    console.error('Error cargando pedidos:', error);
-    alert('No se pudieron cargar los pedidos: ' + error.message);
-  } finally {
-    hideLoader();
+  } catch {
+    // dejamos el string tal cual
   }
+
+  li.innerHTML = `
+    <div class="pedido-header">
+      <span class="pedido-id">#${pedido.id}</span>
+      <span class="pedido-fecha">${fechaStr}</span>
+      <span class="pedido-estado ${pedido.estado}">${pedido.estado}</span>
+    </div>
+    <div class="pedido-cliente">
+      <strong>${pedido.nombre}</strong> - ${pedido.telefono || ''}<br>
+      ${pedido.ciudad || ''} - ${pedido.direccion || ''}
+      ${pedido.otros_datos ? `<br><em>${pedido.otros_datos}</em>` : ''}
+    </div>
+    <div class="pedido-productos">
+      ${pedido.productos || ''}
+    </div>
+    <div class="pedido-footer">
+      <span class="pedido-total">Total: $ ${fmt(pedido.valor_total || 0)}</span>
+      ${!isAtendido ? `<button class="btn btn-primary btn-atender" data-id="${pedido.id}">Marcar como atendido</button>` : ''}
+    </div>
+  `;
+  return li;
 }
 
-// =================== RENDER PEDIDOS ===================
 function renderPedidos(pedidos) {
   const listaProceso = document.getElementById('pedidos-proceso');
   const listaAtendidos = document.getElementById('pedidos-atendidos');
@@ -127,128 +93,121 @@ function renderPedidos(pedidos) {
   listaProceso.innerHTML = '';
   listaAtendidos.innerHTML = '';
 
-  const enProceso = pedidos.filter(p => p.estado !== 'atendido');
-  const atendidos = pedidos.filter(p => p.estado === 'atendido');
+  if (!Array.isArray(pedidos) || pedidos.length === 0) {
+    listaProceso.innerHTML = '<li class="empty">No hay pedidos en proceso</li>';
+    listaAtendidos.innerHTML = '<li class="empty">No hay pedidos atendidos</li>';
+    return;
+  }
+
+  const enProceso = pedidos.filter(p => (p.estado || '').toLowerCase() !== 'atendido');
+  const atendidos = pedidos.filter(p => (p.estado || '').toLowerCase() === 'atendido');
 
   if (enProceso.length === 0) {
     listaProceso.innerHTML = '<li class="empty">No hay pedidos en proceso</li>';
   } else {
-    enProceso.forEach(pedido => {
-      listaProceso.appendChild(crearPedidoItem(pedido, false));
+    enProceso.forEach(p => {
+      listaProceso.appendChild(crearPedidoItem(p, false));
     });
   }
 
   if (atendidos.length === 0) {
     listaAtendidos.innerHTML = '<li class="empty">No hay pedidos atendidos</li>';
   } else {
-    atendidos.forEach(pedido => {
-      listaAtendidos.appendChild(crearPedidoItem(pedido, true));
+    atendidos.forEach(p => {
+      listaAtendidos.appendChild(crearPedidoItem(p, true));
     });
   }
 }
 
-// =================== CREAR ITEM DE PEDIDO ===================
-function crearPedidoItem(pedido, esAtendido) {
-  const li = document.createElement('li');
-  li.className = 'pedido-item';
-  
-  const fecha = new Date(pedido.timestamp).toLocaleString('es-CO', {
-    dateStyle: 'short',
-    timeStyle: 'short'
-  });
+// =================== API PEDIDOS ===================
+async function cargarPedidos() {
+  showLoader();
+  try {
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('No hay token de autenticación');
+    }
 
-  li.innerHTML = `
-    <div class="pedido-header">
-      <strong>Pedido #${pedido.id}</strong>
-      <span class="fecha">${fecha}</span>
-    </div>
-    <div class="pedido-info">
-      <p><strong>Cliente:</strong> ${pedido.nombre}</p>
-      <p><strong>Teléfono:</strong> ${pedido.telefono}</p>
-      <p><strong>Ciudad:</strong> ${pedido.ciudad}</p>
-      <p><strong>Dirección:</strong> ${pedido.direccion}</p>
-      ${pedido.otros_datos ? `<p><strong>Otros:</strong> ${pedido.otros_datos}</p>` : ''}
-    </div>
-    <div class="pedido-productos">
-      <p><strong>Productos:</strong></p>
-      <p class="productos-detalle">${pedido.productos}</p>
-    </div>
-    <div class="pedido-footer">
-      <strong class="total">Total: $${pedido.valor_total.toFixed(2)}</strong>
-      ${!esAtendido ? `
-        <button class="btn-atender" data-id="${pedido.id}">
-          Marcar como atendido
-        </button>
-      ` : `
-        <span class="badge-atendido">✓ Atendido</span>
-      `}
-    </div>
-  `;
+    const res = await fetch(API_PEDIDOS, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json'
+      },
+      cache: 'no-store'
+    });
 
-  // Agregar evento al botón si no está atendido
-  if (!esAtendido) {
-    const btnAtender = li.querySelector('.btn-atender');
-    btnAtender?.addEventListener('click', () => marcarComoAtendido(pedido.id));
+    if (res.status === 401 || res.status === 403) {
+      alert('Tu sesión ha expirado o no tienes permisos. Inicia sesión nuevamente.');
+      window.location.href = 'login.html';
+      return;
+    }
+
+    if (!res.ok) {
+      const txt = await res.text().catch(() => '');
+      throw new Error(`Error al cargar pedidos.\n${txt}`);
+    }
+
+    const pedidos = await res.json();
+    renderPedidos(pedidos);
+  } catch (err) {
+    console.error('Error cargando pedidos:', err);
+    alert('No se pudieron cargar los pedidos.\n' + err.message);
+  } finally {
+    hideLoader();
   }
-
-  return li;
 }
 
-// =================== MARCAR COMO ATENDIDO ===================
 async function marcarComoAtendido(pedidoId) {
   if (!confirm('¿Marcar este pedido como atendido?')) return;
 
   try {
-    // Aquí deberías hacer un POST/PUT a tu API para actualizar el estado
-    // Por ahora, solo recargamos (Google Sheets requiere implementar el endpoint)
-    
-    alert('Funcionalidad pendiente: Necesitas implementar el endpoint de actualización en el backend de Google Sheets');
-    
-    // await fetch(`${API_PEDIDOS}?id=${pedidoId}`, {
-    //   method: 'PUT',
-    //   body: JSON.stringify({ estado: 'atendido' })
-    // });
-    
-    // await cargarPedidos();
-  } catch (error) {
-    console.error('Error:', error);
-    alert('Error al actualizar el pedido');
-  }
-}
-
-// =================== BOTÓN LOGOUT ===================
-function agregarBotonLogout() {
-  const nav = document.querySelector('nav');
-  if (!nav) return;
-
-  // Verificar si ya existe
-  if (document.getElementById('btn-logout')) return;
-
-  const userData = window.authUtils?.getUserData();
-  if (!userData) return;
-
-  // Crear botón de logout
-  const logoutBtn = document.createElement('a');
-  logoutBtn.id = 'btn-logout';
-  logoutBtn.href = '#';
-  logoutBtn.innerHTML = `
-    <span style="margin-right: 10px;">👤 ${userData.username}</span>
-    <span style="color: #ff6b6b;">Cerrar sesión</span>
-  `;
-  logoutBtn.style.cssText = 'display: flex; align-items: center; gap: 5px;';
-  
-  logoutBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    if (confirm('¿Cerrar sesión?')) {
-      window.authUtils?.logout();
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('No hay token de autenticación');
     }
-  });
 
-  // Reemplazar el enlace de login
-  const loginLink = document.getElementById('enlace-login');
-  if (loginLink) {
-    loginLink.replaceWith(logoutBtn);
-  } else {
-    nav.appendChild(logoutBtn);
+    const res = await fetch(`${API_PEDIDOS}/${pedidoId}/estado`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ estado: 'atendido' })
+    });
+
+    if (res.status === 401 || res.status === 403) {
+      alert('Tu sesión ha expirado o no tienes permisos. Inicia sesión nuevamente.');
+      window.location.href = 'login.html';
+      return;
+    }
+
+    if (!res.ok) {
+      const txt = await res.text().catch(() => '');
+      throw new Error(`No se pudo actualizar el pedido.\n${txt}`);
+    }
+
+    await cargarPedidos();
+  } catch (err) {
+    console.error('Error actualizando pedido:', err);
+    alert('Error al actualizar el pedido.\n' + err.message);
   }
 }
+
+// =================== BOOTSTRAP ===================
+document.addEventListener('DOMContentLoaded', () => {
+  ensureAuthenticatedAdmin();
+
+  const panel = document.getElementById('pedidos-panel');
+  if (panel) {
+    panel.addEventListener('click', (e) => {
+      const btnAtender = e.target.closest('.btn-atender');
+      if (btnAtender) {
+        const id = Number(btnAtender.dataset.id);
+        if (id) marcarComoAtendido(id);
+      }
+    });
+  }
+
+  cargarPedidos();
+});

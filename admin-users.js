@@ -5,12 +5,12 @@ const USER_KEY = 'user_data';
 
 // =================== AUTH UTILS ===================
 function getAuthToken() {
-  return localStorage.getItem(TOKEN_KEY);
+  return sessionStorage.getItem(TOKEN_KEY);
 }
 
 function getUserData() {
   try {
-    return JSON.parse(localStorage.getItem(USER_KEY));
+    return JSON.parse(sessionStorage.getItem(USER_KEY));
   } catch {
     return null;
   }
@@ -26,8 +26,8 @@ function isAdmin() {
 }
 
 function clearAuthData() {
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(USER_KEY);
+  sessionStorage.removeItem(TOKEN_KEY);
+  sessionStorage.removeItem(USER_KEY);
 }
 
 // =================== LOADER ===================
@@ -41,80 +41,37 @@ function hideLoader() {
   if (img) img.style.display = 'none';
 }
 
-// =================== AUTH CHECK ===================
-document.addEventListener('DOMContentLoaded', async () => {
-  console.log('🔍 Verificando permisos de administrador...');
-
-  // Verificar autenticación
-  if (!isAuthenticated()) {
-    alert('Debes iniciar sesión para acceder a esta página');
-    window.location.href = 'login.html';
-    return;
-  }
-
-  // Verificar si es ADMIN
-  if (!isAdmin()) {
-    // Mostrar página de no autorizado
-    mostrarNoAutorizado();
-    return;
-  }
-
-  console.log('✅ Acceso autorizado, cargando usuarios...');
-
-  // Cargar usuarios
-  await cargarUsuarios();
-
-  // Configurar formulario
-  configurarFormulario();
-
-  // Agregar botón de logout
-  agregarBotonLogout();
-});
-
-// =================== MOSTRAR NO AUTORIZADO ===================
-function mostrarNoAutorizado() {
-  const panel = document.getElementById('users-panel');
-  if (!panel) return;
-
-  panel.innerHTML = `
-    <div class="no-autorizado">
-      <h2>🚫 Acceso Denegado</h2>
-      <p>No tienes permisos de administrador para acceder a esta página.</p>
-      <p>Solo los administradores pueden gestionar usuarios.</p>
-      <br>
-      <a href="index.html" class="btn-volver">← Volver al Inicio</a>
-    </div>
-  `;
-  
-  agregarBotonLogout();
-}
-
 // =================== CARGAR USUARIOS ===================
 async function cargarUsuarios() {
   showLoader();
-
   try {
     const token = getAuthToken();
+    if (!token) throw new Error('No hay token.');
+
     const response = await fetch(`${API_BASE}/users`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+        'Accept': 'application/json'
+      },
+      cache: 'no-store'
     });
 
+    if (response.status === 401 || response.status === 403) {
+      throw new Error('No autorizado');
+    }
+
     if (!response.ok) {
-      throw new Error('Error al cargar usuarios');
+      const errText = await response.text().catch(() => '');
+      throw new Error(`Error al cargar usuarios:\n${errText}`);
     }
 
     const users = await response.json();
     renderUsuarios(users);
-
   } catch (error) {
     console.error('Error cargando usuarios:', error);
-    document.getElementById('users-list').innerHTML = `
-      <p class="error-message">Error al cargar usuarios: ${error.message}</p>
-    `;
+    alert('No se pudieron cargar los usuarios.\n' + error.message);
+    mostrarNoAutorizado();
   } finally {
     hideLoader();
   }
@@ -202,10 +159,7 @@ function configurarFormulario() {
       
       alert(`✅ Usuario "${newUser.username}" creado exitosamente`);
       form.reset();
-      
-      // Recargar lista de usuarios
       await cargarUsuarios();
-
     } catch (error) {
       console.error('Error creando usuario:', error);
       alert(`❌ Error: ${error.message}`);
@@ -224,45 +178,59 @@ function agregarBotonLogout() {
   const userData = getUserData();
   if (!userData) return;
 
-  // Crear menú desplegable
-  const userMenu = document.createElement('div');
-  userMenu.className = 'user-menu';
-  userMenu.innerHTML = `
-    <a href="#" class="user-menu-trigger">
-      <img src="Imagenes/user.png" alt="Usuario" id="login">
-      <span class="username-display">${userData.username}</span>
-    </a>
-    <div class="user-dropdown" style="display: none;">
-      <a href="admin-users.html">👥 Gestionar Usuarios</a>
-      <a href="pedidos.html">📦 Pedidos</a>
-      <a href="#" id="logout-link">🚪 Cerrar Sesión</a>
-    </div>
-  `;
+  // Mostrar nombre de usuario en el header
+  const infoSpan = document.createElement('span');
+  infoSpan.className = 'user-header-info';
+  infoSpan.textContent = userData.username;
+  userAdminLink.appendChild(infoSpan);
 
-  userAdminLink.replaceWith(userMenu);
+  // Crear botón/logout en el nav
+  const nav = document.querySelector('header nav');
+  if (!nav) return;
 
-  // Toggle dropdown
-  const trigger = userMenu.querySelector('.user-menu-trigger');
-  const dropdown = userMenu.querySelector('.user-dropdown');
-  
-  trigger.addEventListener('click', (e) => {
-    e.preventDefault();
-    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
-  });
+  const logoutBtn = document.createElement('a');
+  logoutBtn.href = '#';
+  logoutBtn.id = 'logout-link';
+  logoutBtn.textContent = 'Cerrar sesión';
 
-  // Cerrar dropdown al hacer click fuera
-  document.addEventListener('click', (e) => {
-    if (!userMenu.contains(e.target)) {
-      dropdown.style.display = 'none';
-    }
-  });
-
-  // Logout
-  document.getElementById('logout-link')?.addEventListener('click', (e) => {
+  logoutBtn.addEventListener('click', (e) => {
     e.preventDefault();
     if (confirm('¿Cerrar sesión?')) {
       clearAuthData();
       window.location.href = 'login.html';
     }
   });
+
+  nav.appendChild(logoutBtn);
 }
+
+// =================== MOSTRAR NO AUTORIZADO ===================
+function mostrarNoAutorizado() {
+  const panel = document.getElementById('users-panel');
+  if (!panel) return;
+
+  panel.innerHTML = `
+    <div class="no-autorizado">
+      <h2>🚫 Acceso Denegado</h2>
+      <p>No tienes permisos de administrador para acceder a esta página.</p>
+      <p>Solo los administradores pueden gestionar usuarios.</p>
+      <br>
+      <a href="index.html" class="btn-volver">← Volver al Inicio</a>
+    </div>
+  `;
+}
+
+// =================== BOOTSTRAP ===================
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!isAuthenticated() || !isAdmin()) {
+    mostrarNoAutorizado();
+    agregarBotonLogout();
+    return;
+  }
+
+  console.log('✅ Acceso autorizado, cargando usuarios...');
+
+  await cargarUsuarios();
+  configurarFormulario();
+  agregarBotonLogout();
+});
