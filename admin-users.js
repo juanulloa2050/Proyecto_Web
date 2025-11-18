@@ -3,14 +3,15 @@ const API_BASE = 'https://proyectowebbackend-production.up.railway.app/api';
 const TOKEN_KEY = 'auth_token';
 const USER_KEY = 'user_data';
 
-// =================== AUTH UTILS ===================
+// =================== AUTH UTILS (sessionStorage) ===================
 function getAuthToken() {
   return sessionStorage.getItem(TOKEN_KEY);
 }
 
 function getUserData() {
   try {
-    return JSON.parse(sessionStorage.getItem(USER_KEY));
+    const raw = sessionStorage.getItem(USER_KEY);
+    return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
   }
@@ -22,7 +23,7 @@ function isAuthenticated() {
 
 function isAdmin() {
   const user = getUserData();
-  return user?.role === 'ADMIN';
+  return user && user.role === 'ADMIN';
 }
 
 function clearAuthData() {
@@ -71,7 +72,6 @@ async function cargarUsuarios() {
   } catch (error) {
     console.error('Error cargando usuarios:', error);
     alert('No se pudieron cargar los usuarios.\n' + error.message);
-    mostrarNoAutorizado();
   } finally {
     hideLoader();
   }
@@ -141,6 +141,8 @@ function configurarFormulario() {
 
     try {
       const token = getAuthToken();
+      if (!token) throw new Error('Sesión no válida.');
+
       const response = await fetch(`${API_BASE}/users`, {
         method: 'POST',
         headers: {
@@ -173,14 +175,13 @@ function configurarFormulario() {
 // =================== BOTÓN LOGOUT ===================
 function agregarBotonLogout() {
   const userAdminLink = document.getElementById('enlace-user-admin');
-  if (userAdminLink) {
-    const userData = getUserData();
-    if (userData) {
-      const infoSpan = document.createElement('span');
-      infoSpan.className = 'user-header-info';
-      infoSpan.textContent = userData.username;
-      userAdminLink.appendChild(infoSpan);
-    }
+  const userData = getUserData();
+
+  if (userAdminLink && userData) {
+    const infoSpan = document.createElement('span');
+    infoSpan.className = 'user-header-info';
+    infoSpan.textContent = userData.username;
+    userAdminLink.appendChild(infoSpan);
   }
 
   const nav = document.querySelector('header nav');
@@ -202,39 +203,21 @@ function agregarBotonLogout() {
   nav.appendChild(logoutBtn);
 }
 
-// =================== MOSTRAR NO AUTORIZADO ===================
-function mostrarNoAutorizado() {
-  const panel = document.getElementById('users-panel');
-  if (!panel) return;
-
-  panel.innerHTML = `
-    <div class="no-autorizado">
-      <h2>🚫 Acceso Denegado</h2>
-      <p>No tienes permisos de administrador para acceder a esta página.</p>
-      <p>Solo los administradores pueden gestionar usuarios.</p>
-      <br>
-      <a href="index.html" class="btn-volver">← Volver al Inicio</a>
-    </div>
-  `;
-}
-
 // =================== BOOTSTRAP ===================
 document.addEventListener('DOMContentLoaded', async () => {
-  // 1) Si NO hay sesión => ir al login
-  if (!isAuthenticated()) {
+  const token = getAuthToken();
+  const user = getUserData();
+
+  // Si no hay sesión o no es admin => redirigir al login
+  if (!token || !user || user.role !== 'ADMIN') {
+    clearAuthData();
+    alert('Debes iniciar sesión como administrador para acceder a esta página.');
     window.location.href = 'login.html';
     return;
   }
 
-  // 2) Si hay sesión pero NO es admin => mostrar acceso denegado
-  if (!isAdmin()) {
-    agregarBotonLogout();
-    mostrarNoAutorizado();
-    return;
-  }
-
-  // 3) Es admin => cargar normalmente
-  console.log('✅ Acceso autorizado, cargando usuarios...');
+  // Solo admins llegan aquí
+  console.log('✅ Acceso autorizado (ADMIN), cargando usuarios...');
 
   await cargarUsuarios();
   configurarFormulario();
