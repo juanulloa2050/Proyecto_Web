@@ -939,7 +939,6 @@ select:invalid {
     max-width: 900px;
     margin: 40px auto;
     padding: 20px;
-    font-family: Arial, sans-serif;
 
     #cargando {
         margin: 10px auto;
@@ -952,7 +951,7 @@ select:invalid {
     text-align: center;
     margin-bottom: 25px;
     font-size: 28px;
-    color: #558b2f; /* verde oscuro */
+    color: var(--color-hover-nav);
 }
 
 /* ======== SECCIONES ======== */
@@ -962,7 +961,7 @@ select:invalid {
 
 .pedido-seccion h3 {
     margin-bottom: 15px;
-    color: #7cb342; /* verde principal */
+    color: var(--color-hover-btn);
     font-size: 22px;
 }
 
@@ -978,7 +977,7 @@ ul {
     padding: 18px;
     margin-bottom: 15px;
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.10);
-    border-left: 6px solid #7cb342; /* detalle verde */
+    border-left: 6px solid --color-placeholder;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -1017,12 +1016,12 @@ ul {
 }
 
 .pendiente {
-    background-color: #fdd835; /* amarillo de tu página */
+    background-color: #fdd835; 
     color: #333;
 }
 
 .atendido {
-    background-color: #7cb342; /* verde principal */
+    background-color: #7cb342; 
 }
 
 /* ======== INFO DEL CLIENTE ======== */
@@ -1053,7 +1052,7 @@ ul {
 
 /* ======== BOTÓN ======== */
 .btn-atender {
-    background: #7cb342; /* verde */
+    background: var(--color-header); /* verde */
     border: none;
     padding: 8px 14px;
     border-radius: 8px;
@@ -1064,5 +1063,5 @@ ul {
 }
 
 .btn-atender:hover {
-    background: #558b2f; /* verde más oscuro */
+    background: var(--color-hover-btn); 
 }
