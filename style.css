@@ -1118,11 +1118,19 @@ ul {
     margin-bottom: 6px;
 }
 
-.form-group input,
 .form-group select {
-    width: 60vw;
+    width: 100%;
     padding: 10px;
-    border: 2px solid var(--color-placeholder);
+    border: 1px solid var(--color-placeholder);
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.form-group input{
+    width: 88.929889%;
+    padding: 10px;
+    border: 1px solid var(--color-placeholder);
     border-radius: 8px;
     font-size: 14px;
     transition: border-color 0.2s;
