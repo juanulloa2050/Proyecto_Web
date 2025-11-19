@@ -977,7 +977,7 @@ ul {
     padding: 18px;
     margin-bottom: 15px;
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.10);
-    border-left: 6px solid var(--color-placeholder);
+    border-left: 6px solid var(--color-hover-btn);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -1088,7 +1088,7 @@ ul {
 #cargando {
     display: block;
     margin: 15px auto;
-    width: 80px;
+    width: 85px;
 }
 
 /* ======== FORMULARIO DE CREACIÓN ======== */
@@ -1098,7 +1098,7 @@ ul {
     border-radius: 12px;
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
     margin-bottom: 35px;
-    border-left: 6px solid var(--color-placeholder);
+    border-left: 6px solid var(--color-hover-btn);
 }
 
 .user-form-section h3 {
