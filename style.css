@@ -930,3 +930,14 @@ select:invalid {
         text-decoration: underline;
     }
 }
+
+/* ------------------------------------------------------------------------------------------- */
+/* Pedidos */
+
+#cargando {
+    width: 85px;
+    height: 85px;
+    align-self: center;
+    margin-top: 250px;
+    margin-bottom: 360px;
+}
