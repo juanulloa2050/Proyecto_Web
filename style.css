@@ -451,7 +451,7 @@ select:invalid {
 /* ------------------------------------------------------------------------------------------- */
 /* Media queries generales */
 
-@media (max-width: 745px) {
+@media (max-width: 950px) {
     header {
         flex-wrap: wrap;
         height: 110px;
