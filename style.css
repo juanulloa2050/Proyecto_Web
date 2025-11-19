@@ -1128,7 +1128,7 @@ ul {
 }
 
 .form-group input{
-    width: 88.929889%;
+    width: 100%;
     padding: 10px;
     border: 1px solid var(--color-placeholder);
     border-radius: 8px;
