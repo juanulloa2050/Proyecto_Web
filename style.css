@@ -504,7 +504,7 @@ select:invalid {
     }
 }
 
-@media (max-width: 440px) {
+@media (max-width: 640px) {
     header {
         padding: 0px;
         height: 160px;
