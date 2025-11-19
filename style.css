@@ -1120,9 +1120,9 @@ ul {
 
 .form-group input,
 .form-group select {
-    width: 100%;
+    width: 60vw;
     padding: 10px;
-    border: 2px solid #c9e5b1;
+    border: 2px solid var(--color-placeholder);
     border-radius: 8px;
     font-size: 14px;
     transition: border-color 0.2s;
@@ -1130,7 +1130,7 @@ ul {
 
 .form-group input:focus,
 .form-group select:focus {
-    border-color: #7cb342;
+    border-color: var(--color-header);
     outline: none;
 }
 
