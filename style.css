@@ -951,7 +951,7 @@ select:invalid {
     text-align: center;
     margin-bottom: 25px;
     font-size: 28px;
-    color: var(--color-hover-nav);
+    color: var(--color-header);
 }
 
 /* ======== SECCIONES ======== */
@@ -977,7 +977,7 @@ ul {
     padding: 18px;
     margin-bottom: 15px;
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.10);
-    border-left: 6px solid --color-placeholder;
+    border-left: 6px solid var(--color-placeholder);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -1052,7 +1052,7 @@ ul {
 
 /* ======== BOTÓN ======== */
 .btn-atender {
-    background: var(--color-header); /* verde */
+    background: var(--color-hover-btn); 
     border: none;
     padding: 8px 14px;
     border-radius: 8px;
@@ -1063,5 +1063,5 @@ ul {
 }
 
 .btn-atender:hover {
-    background: var(--color-hover-btn); 
+    background: var(--color-header); 
 }
