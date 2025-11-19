@@ -507,10 +507,10 @@ select:invalid {
 @media (max-width: 440px) {
     header {
         padding: 0px;
-        height: 170px;
+        height: 160px;
     }
     header > a {
-        margin-bottom: 25px;
+        margin-bottom: 15px;
     }
     nav{
         flex-wrap: wrap;
