@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Conexión Backend</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-box {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .success { border-color: #28a745; background: #d4edda; }
+        .error { border-color: #dc3545; background: #f8d7da; }
+        .info { border-color: #17a2b8; background: #d1ecf1; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Test de Conexión - Backend Railway</h1>
+    
+    <div class="test-box info">
+        <h3>Información</h3>
+        <p><strong>Backend URL:</strong> https://proyectowebbackend-production.up.railway.app</p>
+        <p><strong>Frontend URL:</strong> https://juanulloa2050.github.io/Proyecto_Web/</p>
+    </div>
+
+    <div class="test-box">
+        <h3>1. Test de CORS</h3>
+        <button onclick="testCORS()">Probar CORS</button>
+        <div id="cors-result"></div>
+    </div>
+
+    <div class="test-box">
+        <h3>2. Test de Login</h3>
+        <button onclick="testLogin()">Probar Login (admin/admin123)</button>
+        <div id="login-result"></div>
+    </div>
+
+    <div class="test-box">
+        <h3>3. Test con Token</h3>
+        <button onclick="testWithToken()">Probar Endpoint Protegido</button>
+        <div id="token-result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://proyectowebbackend-production.up.railway.app/api';
+        let savedToken = null;
+
+        async function testCORS() {
+            const result = document.getElementById('cors-result');
+            result.innerHTML = '<p>⏳ Probando CORS...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/debug/whoami`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.status === 401 || response.status === 403) {
+                    result.innerHTML = `
+                        <div class="success">
+                            <h4>✅ CORS funciona correctamente</h4>
+                            <p>Status: ${response.status} (esperado - necesitas autenticación)</p>
+                            <p>Esto significa que el backend está permitiendo peticiones desde este origen.</p>
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Conexión exitosa</h4>
+                            <p>Status: ${response.status}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Error de CORS</h4>
+                        <p>${error.message}</p>
+                        <p><strong>Solución:</strong> Verifica que CorsConfig.java incluya tu URL de GitHub Pages</p>
+                    </div>
+                `;
+                console.error('Error:', error);
+            }
+        }
+
+        async function testLogin() {
+            const result = document.getElementById('login-result');
+            result.innerHTML = '<p>⏳ Intentando login...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    savedToken = data.token;
+                    result.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Login exitoso</h4>
+                            <p><strong>Usuario:</strong> ${data.username}</p>
+                            <p><strong>Rol:</strong> ${data.role}</p>
+                            <p><strong>Token:</strong> ${data.token.substring(0, 50)}...</p>
+                            <p style="margin-top: 10px; color: green;">Ahora puedes probar el Test 3</p>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(data.error || 'Error en login');
+                }
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Error en login</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+                console.error('Error:', error);
+            }
+        }
+
+        async function testWithToken() {
+            const result = document.getElementById('token-result');
+            
+            if (!savedToken) {
+                result.innerHTML = `
+                    <div class="error">
+                        <p>❌ Primero debes hacer login exitoso (Test 2)</p>
+                    </div>
+                `;
+                return;
+            }
+
+            result.innerHTML = '<p>⏳ Probando endpoint protegido...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/debug/whoami`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${savedToken}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Autenticación JWT funciona</h4>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    throw new Error('Token inválido o expirado');
+                }
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Error con token</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>
